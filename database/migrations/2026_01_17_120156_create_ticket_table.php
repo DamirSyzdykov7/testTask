@@ -16,7 +16,7 @@ return new class extends Migration
             Schema::create($this->tableName, function (Blueprint $table) {
                 $table->id();
                 $table->string('client_id')->comment('айди клиента');
-                $table->string('term')->unique()->comment('тема заявки');
+                $table->string('topic')->comment('тема заявки');
                 $table->string('description')->comment('описание заявки');
                 $table->tinyInteger('status')->comment('статус заявки');
                 $table->date('response_date')->comment('дата ответа');

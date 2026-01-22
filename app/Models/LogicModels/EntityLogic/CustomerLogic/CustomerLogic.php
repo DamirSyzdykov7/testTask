@@ -14,10 +14,11 @@ class CustomerLogic extends CoreEngine implements EntityLogicInterface{
         return parent::__construct();
     }
 
-    public function saveEntity(array $entity) {
+    public function saveEntity(array $entity , $key = null) {
         try {
-            return $this->save($entity);
+            return $this->save($entity , $key);
         } catch (\Throwable $exception) {
+            dump($exception->getMessage() , $exception->getFile() , $exception->getLine());
             Log::error('CustomerSaveException' , ['message' => $exception->getMessage() , 'line' => $exception->getLine(), 'file' => $exception->getFile()]);
             return false;
         }

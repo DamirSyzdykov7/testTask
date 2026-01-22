@@ -15,26 +15,38 @@ class CoreEngine {
     }
 
     protected function save(array $data, array|string $key = null, $type = self::UPDATE_OR_INSERT) {
+        $data = array_intersect_key($data , array_flip($this->engine->getFillable()));
         try {
             switch ($type) {
                 case self::UPDATE_OR_INSERT:
-                    $keySave = isset($key) ? $key : $data['id'];
-                    return DB::table($this->engine->getName())->updateOrInsert(
-                        [is_array($key) ? $key : $keySave => $data[$keySave]],
-                        $data
-                    );
+                    $keySave = $key ?? ($data['id'] ?? null);
+
+                    $where = $keySave !== null ? (is_array($key) ? $key : [$keySave => $data[$keySave]]) : null;
+
+                    $table = DB::table($this->engine->getName());
+                    if ($where !== null) {
+                        $record = $table->where($where)->first();
+                        if ($record) {
+                            $table->where($where)->update($data);
+                            return array_merge($data, ['id' => $record->id]);
+                        }
+                    }
+                    $id = $table->insertGetId($data);
+                    return array_merge($data, ['id' => $id]);
                     break;
                 case self::BUTCH_UPDATE_OR_INSERT:
                     if (!is_array($key)) {
                         return 'должен быть массив условий';
                     }
-                    return DB::table($this->engine->getName())->upsert(
+                    $result =  DB::table($this->engine->getName())->upsert(
                         $data,
                         $key
                     );
+                    return $result ? $data : false;
                     break;
             }
         } catch (\Throwable $exception) {
+            dump($exception->getMessage() , $exception->getFile() , $exception->getLine());
             Log::error('CoreEngineSaveException', ['message' => $exception->getMessage(), 'line' => $exception->getLine(), 'file' => $exception->getFile()]);
             return false;
         }

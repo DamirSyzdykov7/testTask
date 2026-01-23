@@ -11,6 +11,13 @@ use Illuminate\Http\UploadedFile;
 
 class CustomerTicketLogic extends CoreEngine implements EntityLogicInterface{
 
+    public $status = [
+        'new' => 0,
+        'in_progress' => 1,
+        'resolved' => 2,
+        'closed' => 3,
+    ];
+
     public function __construct(Ticket $customer) {
         $this->engine = $customer;
         return parent::__construct();
@@ -64,7 +71,6 @@ class CustomerTicketLogic extends CoreEngine implements EntityLogicInterface{
                         ->toMediaCollection('attachments');
                 }
             }
-
             DB::commit();
             return $ticket;
 
@@ -92,11 +98,8 @@ class CustomerTicketLogic extends CoreEngine implements EntityLogicInterface{
             if (!$ticket) {
                 return null;
             }
-
             $ticket->load('media');
-
             return $ticket;
-
         } catch (\Throwable $exception) {
             dump($exception->getMessage());
             Log::error('GetTicketWithAttachmentsException', [
@@ -106,5 +109,9 @@ class CustomerTicketLogic extends CoreEngine implements EntityLogicInterface{
             ]);
             return null;
         }
+    }
+
+    public function getStatusTypes() {
+        return $this->status;
     }
 }

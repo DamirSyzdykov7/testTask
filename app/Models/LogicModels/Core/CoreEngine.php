@@ -19,9 +19,9 @@ class CoreEngine {
         try {
             switch ($type) {
                 case self::UPDATE_OR_INSERT:
-                    $keySave = $key ?? ($data['id'] ?? null);
+                    $keySave = $key ?? ($data['id'] ? 'id' : null);
 
-                    $where = $keySave !== null ? (is_array($key) ? $key : [$keySave => $data[$keySave]]) : null;
+                    $where = $keySave != null ? (is_array($key) ? $key : [$keySave => $data[$keySave]]) : null;
 
                     $table = DB::table($this->engine->getName());
                     if ($where !== null) {
@@ -64,7 +64,7 @@ class CoreEngine {
 
     protected function get($param = '') {
         try {
-            return DB::table($this->engine->getName())->where($param)->get()->toArray();
+            return DB::table($this->engine->getName())->where($param);
         } catch (\Throwable $exception) {
             Log::error('CoreEngineGetException', ['message' => $exception->getMessage(), 'line' => $exception->getLine(), 'file' => $exception->getFile()]);
             return false;

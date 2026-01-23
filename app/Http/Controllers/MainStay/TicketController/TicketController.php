@@ -26,9 +26,7 @@ class TicketController {
         $this->fileSystemLogic = $fileSystemLogic;
     }
 
-    public function store(StoreTicketRequest $request)
-    {
-        try {
+    public function store(StoreTicketRequest $request) {
             $customer = $this->customerLogic->saveEntity($request->all() , 'phone_number');
 
             if (!$customer) {
@@ -41,11 +39,8 @@ class TicketController {
                 'client_id' => $customer['id'],
                 'response_date' =>  date('Y-m-d H:i:s'),
             ];
-
             $files = $request->hasFile('files') ? $request->file('files') : [];
-
             $ticket = $this->customerTicketLogic->saveWithAttachments($ticketData, $files);
-
             if (!$ticket) {
                 return response()->json([
                     'success' => false,
@@ -54,7 +49,6 @@ class TicketController {
             }
 
             return response()->json([
-                'success' => true,
                 'message' => 'Сообщение успешно отправлено',
                 'data' => [
                     'ticket_id' => $ticket->id,
@@ -62,23 +56,25 @@ class TicketController {
                     'status' => $ticket->status,
                 ]
             ], 201);
-
-        } catch (\Throwable $exception) {
-            dump($exception->getMessage() , $exception->getFile() , $exception->getLine());
-            return response()->json(['message' => 'Ошибка сервера',], 500);
-        }
     }
 
-    public function show($id)
-    {
-        try {
-            $ticket = $this->customerTicketLogic->getWithAttachments($id);
-            if (!$ticket) {
-                return response()->json(['message' => 'Заявка не найдена'], 404);
-            }
-            return response()->json(['data' => $ticket]);
-        } catch (\Throwable $exception) {
-            return response()->json(['message' => 'Ошибка сервера'], 500);
-        }
+    public function updateTicket(Request $request) {
+        return $this->customerTicketLogic->saveEntity($request->all());
+    }
+
+    public function adminTicket(Request $request) {
+        $tickets = ($this->customerTicketLogic
+            ->getEntity(!empty($request->all()) ? $request->all() :null)
+            ->join('customer', 'customer.id', '=', 'ticket.client_id')
+            ->select('ticket.*', 'customer.name as customer_name', 'customer.email')
+            ->get()->toArray());
+        $stats = $this->customerTicketLogic->getStatusTypes();
+        return view('admin.tickets.TicketsPage', compact('tickets', 'stats'));
+    }
+
+    public function adminTicketsDetalis(Request $request) {
+        $data = $request->all();
+        $ticket = Ticket::with(['media'])->findOrFail($data['id']);
+        return view('admin.tickets.chank.Ticketeitailpopup', compact('ticket' , 'data'));
     }
 }

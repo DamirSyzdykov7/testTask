@@ -13,6 +13,7 @@ class Ticket extends Model implements HasMedia {
 
     protected $table = 'ticket';
     protected $fillable = [
+        'id',
         'client_id',
         'topic',
         'description',
